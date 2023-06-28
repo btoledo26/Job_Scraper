@@ -18,20 +18,21 @@ class Scraper:
         options = Options()
         options.add_argument("-headless")
         self.driver = webdriver.Firefox(options=options)
+        self.proxies = []
 
     def gather_proxies(self) -> None:
         self.driver.get(self.proxy_url)
-        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.TAG_NAME, 'tr')))
-        table_rows = self.driver.find_elements(By.TAG_NAME, 'tr')
-        # self.driver.close()
+        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.TAG_NAME, 'tbody')))
+        table_body = self.driver.find_element(By.TAG_NAME, 'tbody')
+        table_rows = table_body.find_elements(By.TAG_NAME, 'tr')
 
-        proxies = []
         for row in table_rows:
-            ip = row.find_elements(By.TAG_NAME, 'td')[1].text
-            port = row.find_elements(By.TAG_NAME, 'td')[2].text
-            proxies.append(ip+':'+port)
+            ip = row.find_elements(By.TAG_NAME, 'td')[0].text
+            port = row.find_elements(By.TAG_NAME, 'td')[1].text
+            self.proxies.append(ip+':'+port)
 
-        print(proxies)
+        print(self.proxies)
+        self.driver.close()
 
     def scrape_jobs(self) -> None:
         page_number = 0
