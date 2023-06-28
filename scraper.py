@@ -14,14 +14,14 @@ import time
 
 class Scraper:
     def __init__(self):
-        self.proxy_url = "https://sslproxies.org/"
         options = Options()
         options.add_argument("-headless")
         self.driver = webdriver.Firefox(options=options)
         self.proxies = []
 
     def gather_proxies(self) -> None:
-        self.driver.get(self.proxy_url)
+        proxy_url = "https://sslproxies.org/"
+        self.driver.get(proxy_url)
         WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.TAG_NAME, 'tbody')))
         table_body = self.driver.find_element(By.TAG_NAME, 'tbody')
         table_rows = table_body.find_elements(By.TAG_NAME, 'tr')
@@ -31,33 +31,21 @@ class Scraper:
             port = row.find_elements(By.TAG_NAME, 'td')[1].text
             self.proxies.append(ip+':'+port)
 
-        print(self.proxies)
-        self.driver.close()
+        # print(self.proxies)
 
     def scrape_jobs(self) -> None:
         page_number = 0
         url = "https://www.indeed.com/jobs?q=software+engineer&l=Oregon&start=%s" % page_number
-
-        options = Options()
-        options.add_argument("-headless")
-
-        with webdriver.Firefox(options=options) as driver:
-            driver.get(url)
-            joblist = driver.find_element(By.CLASS_NAME, "jobsearch-ResultsList")
-            print(driver.current_url)
-            print(driver.title)
-            driver.close()
-
+        self.driver.get(url)
+        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CLASS_NAME, "jobsearch-ResultsList")))
+        joblist = self.driver.find_element(By.CLASS_NAME, "jobsearch-ResultsList")
         jobs = joblist.find_elements(By.TAG_NAME, 'li')
-        print(joblist)
-        print(jobs)
 
-        for job in jobs:
+        for job in jobs[0:1]:
             print(job.find_element(By.CLASS_NAME, "jcs-JobTitle").text)  # Title
             print(job.find_element(By.CLASS_NAME, "companyName").text)  # Company
             print(job.find_element(By.CLASS_NAME, "companyLocation").text)
-            print(job.find_element(By.CLASS_NAME, "companyName").text)
-            # print(job.find_element(By.CLASS_NAME, "estimated-salary").text)
+            print(job.find_element(By.CLASS_NAME, "jcs-JobTitle").get_attribute('href'))
 
     def cleanup(self) -> None:
         self.driver.quit()
@@ -65,8 +53,8 @@ class Scraper:
 
 def main():
     web_scraper = Scraper()
-    web_scraper.gather_proxies()
-
+    # web_scraper.gather_proxies()
+    web_scraper.scrape_jobs()
     web_scraper.cleanup()
 
 
