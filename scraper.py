@@ -23,8 +23,10 @@ class Scraper:
         self.filepath = "jobListings.csv"
 
     def scrape(self) -> None:
+        print('Setting up file header')
         self.write_csv_header()
 
+        print('Scraping...')
         # add all scrape functions here
         self.scrape_indeed()
 
@@ -32,8 +34,12 @@ class Scraper:
         self.cleanup()
 
     def use_proxy(self) -> None:
+        print('Gathering proxy addresses')
+
         self.__gather_proxies()
         # set up proxy server rotation
+
+        print('Now using proxy')
         pass
 
     def __gather_proxies(self) -> None:
@@ -49,34 +55,38 @@ class Scraper:
             self.proxies.append(ip+':'+port)
 
         # print(self.proxies)
+        print('Proxy addresses gathered successfully')
 
     def __scroll_down_page(self, speed=8):
         current_scroll_position, new_height = 0, 1
         while current_scroll_position <= new_height:
             current_scroll_position += speed
-            self.__driver.execute_script("window.scrollTo(0, {});".format(current_scroll_position))
-            new_height = self.__driver.execute_script("return document.body.scrollHeight")
+            self.driver.execute_script("window.scrollTo(0, {});".format(current_scroll_position))
+            new_height = self.driver.execute_script("return document.body.scrollHeight")
 
     # TODO: Set to private when complete
     def scrape_indeed(self) -> None:
+        print('Scraping Indeed.com')
+
+        # TODO: Increment page number?
         page_number = 0
         url = "https://www.indeed.com/jobs?q=software+engineer&l=Oregon&start=%s" % page_number
         self.driver.get(url)
 
-        # self.driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
+        # Scroll page to load elements
+        self.__scroll_down_page()
 
-        #WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".jcs-JobTitle")))
-        #WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, "companyName")))
-        #WebDriverWait(self.driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "jobTitle")))
-        #WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, "jobTitle")))
-        #WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.XPATH, "/html/body/main/div/div[1]/div/div/div[5]/div[1]/div[5]/div/ul/li[1]/div/div[1]/div/div[1]/div/table[1]/tbody/tr/td/div[1]/h2")))
-        # Get initial list of names
-        job_listings = Wait(self.driver, 15).until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'jobTitle')))
+        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".jcs-JobTitle")))
+        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "companyName")))
+        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "jcs-JobTitle")))
+        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "jobTitle")))
 
         joblist = self.driver.find_element(By.CLASS_NAME, "jobsearch-ResultsList")
         jobs = joblist.find_elements(By.TAG_NAME, 'li')
 
-        print(len(jobs))
+        print(len(jobs)) #Temp print
+
+        # Parse job listings and store in list of rows to be written to file
         rows = []
         for job in jobs[:10]:
             job_title = job.find_element(By.CLASS_NAME, "jobTitle").text
@@ -90,7 +100,9 @@ class Scraper:
             print(company)  # Company
             print(location)
             print(url)
+            print()
 
+        # Write job listings to csv file
         file = open(self.filepath, 'a', newline='')
         write = csv.writer(file, dialect='excel')
         write.writerows(rows)
@@ -100,7 +112,6 @@ class Scraper:
     def write_csv_header(self) -> None:
         # checks if file exists before writing headers
         if not os.path.isfile(self.filepath):
-            print('writing headers')
             col_names = ['Applied',
                          'Job Title',
                          'Company Name',
