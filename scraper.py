@@ -1,5 +1,6 @@
 import os.path
 import csv
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -14,10 +15,7 @@ import time
 class Scraper:
     def __init__(self):
         options = Options()
-        options.add_argument("-headless")
-        options.add_argument('--disable-popup-blocking')
-        options.add_argument('--disable-notifications')
-        options.add_argument('--disable-infobars')
+        # options.add_argument("-headless")
         self.driver = webdriver.Firefox(options=options)
         self.proxies = []
         self.filepath = "jobListings.csv"
@@ -64,7 +62,7 @@ class Scraper:
             self.driver.execute_script("window.scrollTo(0, {});".format(current_scroll_position))
             new_height = self.driver.execute_script("return document.body.scrollHeight")
 
-    # TODO: Set to private when complete
+        # TODO: Set to private when complete
     def scrape_indeed(self) -> None:
         print('Scraping Indeed.com')
 
@@ -76,10 +74,8 @@ class Scraper:
         # Scroll page to load elements
         self.__scroll_down_page()
 
-        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".jcs-JobTitle")))
-        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "companyName")))
+        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, "companyName")))
         WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "jcs-JobTitle")))
-        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "jobTitle")))
 
         joblist = self.driver.find_element(By.CLASS_NAME, "jobsearch-ResultsList")
         jobs = joblist.find_elements(By.TAG_NAME, 'li')
