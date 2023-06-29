@@ -1,2 +1,5 @@
 venv/
 .idea/
+
+geckodriver.log
+indeed_jobs.csv
