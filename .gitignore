@@ -1,5 +1,13 @@
+# Virtual Environment
 venv/
-.idea/
 
+# Pycharm
+.idea/
+__pycache__/
+
+# Selenium
 geckodriver.log
+
+# Output Files
 indeed_jobs.csv
+glassdoor_jobs.csv
