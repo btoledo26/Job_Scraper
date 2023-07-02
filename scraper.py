@@ -1,6 +1,7 @@
 import logging
 import time
 from csv import writer
+import pandas as pd
 from bs4 import BeautifulSoup
 from lxml import etree as et
 
@@ -10,6 +11,7 @@ def scrape(driver, job_search_keyword, location_search_keyword) -> None:
 
     # add all scrape functions here
     scrape_indeed(driver, job_search_keyword, location_search_keyword)
+    # scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
     print('Scraping Complete')
 
@@ -27,9 +29,9 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
                    'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
 
-        # Scrape data from pages
+        # Scrape data from pages, 0-based indexing
         all_jobs = []
-        for page_no in range(0, 5):
+        for page_no in range(0, 11):
             url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, page_no)
             page_dom = __get_dom(driver, url)
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
@@ -54,7 +56,50 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
                       job_search_keyword, location_search_keyword]
             file_writer.writerow(record)
 
+    __remove_duplicates('indeed_jobs.csv')
     print('Finished scraping Indeed.com')
+
+
+def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
+    print('Scraping Glassdoor.com...')
+
+    glassdoor_base_url = 'https://www.glassdoor.com'
+    glassdoor_pagination_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24_IP{}.htm'
+
+    # Open a CSV file to write the job listings data
+    with open('glassdoor_jobs.csv', 'w', newline='', encoding='utf-8') as f:
+        file_writer = writer(f)
+        heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Job Type',
+                   'Searched Job', 'Searched Location']
+        file_writer.writerow(heading)
+
+        # Scrape data from pages, 1-based indexing
+        all_jobs = []
+        for page_no in range(1, 2):
+            url = glassdoor_pagination_url.format(location_search_keyword, job_search_keyword, page_no)
+            page_dom = __get_dom(driver, url)
+            jobs = page_dom.xpath('//div[@class="css-3x5mv1"]')
+            all_jobs = all_jobs + jobs
+            time.sleep(5)
+
+        # Organize data and write it to file
+        for job in all_jobs:
+            job_link = glassdoor_base_url + __get_glassdoor_job_link(job)
+            time.sleep(2)
+            job_title = __get_glassdoor_job_title(job)
+            time.sleep(2)
+            company_name = __get_glassdoor_company_name(job)
+            time.sleep(2)
+            company_location = __get_glassdoor_company_location(job)
+            time.sleep(2)
+            salary = __get_glassdoor_salary(job)
+            time.sleep(2)
+            record = [job_link, job_title, company_name, company_location, salary,
+                      job_search_keyword, location_search_keyword]
+            file_writer.writerow(record)
+
+    __remove_duplicates('glassdoor_jobs.csv')
+    print('Finished scraping Glassdoor.com')
 
 
 def __get_dom(driver, url):
@@ -131,3 +176,55 @@ def __get_indeed_job_type(job):
         job_type = 'Not available'
         logging.exception(e)
     return job_type
+
+
+def __get_glassdoor_job_link(job):
+    try:
+        job_link = job.xpath('./descendant::a/@href')
+        # TODO: cut all instances of 'amp;' from job_link
+    except Exception as e:
+        job_link = 'Not available'
+        logging.exception(e)
+    return job_link
+
+
+def __get_glassdoor_job_title(job):
+    try:
+        job_title = job.xpath('./descendant::a/div/div[2]/text()')
+    except Exception as e:
+        job_title = 'Not available'
+        logging.exception(e)
+    return job_title
+
+
+def __get_glassdoor_company_name(job):
+    try:
+        company_name = job.xpath('./descendant::a/div/div[1]/div[2]/text()')
+    except Exception as e:
+        company_name = 'Not available'
+        logging.exception(e)
+    return company_name
+
+
+def __get_glassdoor_company_location(job):
+    try:
+        job_title = job.xpath('./descendant::a/div/div[3]/text()')
+    except Exception as e:
+        job_title = 'Not available'
+        logging.exception(e)
+    return job_title
+
+
+def __get_glassdoor_salary(job):
+    try:
+        job_title = job.xpath('./descendant::a/div/div[4]/text()')
+    except Exception as e:
+        job_title = 'Not available'
+        logging.exception(e)
+    return job_title
+
+
+def __remove_duplicates(filepath):
+    df = pd.read_csv(filepath)
+    df.drop_duplicates(subset=['Job Title', 'Company Name'], inplace=True)
+    df.to_csv(filepath, index=False)
