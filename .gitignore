@@ -10,4 +10,6 @@ geckodriver.log
 
 # Output Files
 indeed_jobs.csv
+cleaned_indeed_jobs.csv
 glassdoor_jobs.csv
+cleaned_glassdoor_jobs.csv

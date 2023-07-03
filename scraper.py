@@ -70,14 +70,18 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
         all_jobs = []
         for i in range(1, 7):  # site seems to list duplicates after 6th page
+            time.sleep(5)
             jobs = page_dom.xpath('//div[@class="job-search-3x5mv1"]')
             all_jobs = all_jobs + jobs
-            time.sleep(5)
-            driver.find_element(By.CLASS_NAME, 'nextButton').click()
 
-            if i == 1:
-                time.sleep(5)
-                driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
+            if i == 2:
+                try:
+                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
+                except Exception as e:
+                    logging.exception(e)
+
+            if i != 6:
+                driver.find_element(By.CLASS_NAME, 'nextButton').click()
 
         # Organize data and write it to file
         for job in all_jobs:
