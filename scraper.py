@@ -4,7 +4,6 @@ from csv import writer
 import pandas as pd
 from bs4 import BeautifulSoup
 from lxml import etree as et
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 
 
@@ -13,7 +12,7 @@ def scrape(driver, job_search_keyword, location_search_keyword) -> None:
 
     # add all scrape functions here
     scrape_indeed(driver, job_search_keyword, location_search_keyword)
-    # scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
+    scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
     print('Scraping Complete')
 
@@ -43,20 +42,13 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
         # Organize data and write it to file
         for job in all_jobs:
             job_link = indeed_base_url + __get_indeed_job_link(job)
-            time.sleep(2)
             job_title = __get_indeed_job_title(job)
-            time.sleep(2)
             company_name = __get_indeed_company_name(job)
-            time.sleep(2)
             company_location = __get_indeed_company_location(job)
-            time.sleep(2)
             salary = __get_indeed_salary(job)
-            time.sleep(2)
             job_type = __get_indeed_job_type(job)
-            time.sleep(2)
             record = [job_link, job_title, company_name, company_location, salary, job_type,
                       job_search_keyword, location_search_keyword]
-            print(record)
             file_writer.writerow(record)
 
     __remove_duplicates('indeed_jobs.csv')
@@ -82,7 +74,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             all_jobs = all_jobs + jobs
             time.sleep(5)
             driver.find_element(By.CLASS_NAME, 'nextButton').click()
-            
+
             if i == 1:
                 time.sleep(5)
                 driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
@@ -90,15 +82,10 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         # Organize data and write it to file
         for job in all_jobs:
             job_link = glassdoor_base_url + __get_glassdoor_job_link(job)
-            time.sleep(2)
             job_title = __get_glassdoor_job_title(job)
-            time.sleep(2)
             company_name = __get_glassdoor_company_name(job)
-            time.sleep(2)
             company_location = __get_glassdoor_company_location(job)
-            time.sleep(2)
             salary = __get_glassdoor_salary(job)
-            time.sleep(2)
             record = [job_link, job_title, company_name, company_location, salary,
                       job_search_keyword, location_search_keyword]
             file_writer.writerow(record)
@@ -236,4 +223,4 @@ def __get_glassdoor_salary(job):
 def __remove_duplicates(filepath):
     df = pd.read_csv(filepath)
     df.drop_duplicates(subset=['Job Title', 'Company Name'], inplace=True)
-    df.to_csv(filepath, index=False)
+    df.to_csv(f'cleaned_{filepath}', index=False)

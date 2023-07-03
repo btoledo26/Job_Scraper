@@ -6,7 +6,7 @@ from scraper import *
 
 def main():
     # TODO: Add UI
-    job_search_keyword = 'Software+Engineer'
+    job_search_keyword = 'Software Engineer'
     location_search_keyword = 'Oregon'
 
     options = Options()
