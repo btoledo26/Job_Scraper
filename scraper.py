@@ -11,7 +11,7 @@ def scrape(driver, job_search_keyword, location_search_keyword) -> None:
     print('Scraping...')
 
     # add all scrape functions here
-    # scrape_indeed(driver, job_search_keyword, location_search_keyword)
+    scrape_indeed(driver, job_search_keyword, location_search_keyword)
     scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
     print('Scraping Complete')
@@ -68,12 +68,12 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         file_writer.writerow(heading)
 
         all_jobs = []
-        for i in range(1, 7):  # site seems to list duplicates after 6th page, (1, 7)
+        for i in range(1, 7):  # site seems to list duplicates after 6th page
             if i == 1:
                 page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
-            else:
-                time.sleep(5)
-                page_dom = __get_dom(driver, driver.current_url)
+            else:  # !!! leave this code block in this order, scraping breaks otherwise !!!
+                time.sleep(5)  # this sleep call must be here to ensure page loads
+                page_dom = __get_dom(driver, driver.current_url)  # url unknown due to page nav via 'next page' button
                 try:
                     driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()  # Close popup window
                 except Exception as e:
