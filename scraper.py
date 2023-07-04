@@ -4,16 +4,25 @@ from csv import writer
 import pandas as pd
 from bs4 import BeautifulSoup
 from lxml import etree as et
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 
 
 def scrape(driver, job_search_keyword, location_search_keyword) -> None:
     print('Scraping...')
 
+    # Initialize webdriver
+    options = Options()
+    options.add_argument("-headless")
+    driver = webdriver.Firefox(options=options)
+
     # add all scrape functions here
     scrape_indeed(driver, job_search_keyword, location_search_keyword)
     scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
+    # Close web browser
+    driver.quit()
     print('Scraping Complete')
 
 
