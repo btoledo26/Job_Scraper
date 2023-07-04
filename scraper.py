@@ -11,7 +11,7 @@ def scrape(driver, job_search_keyword, location_search_keyword) -> None:
     print('Scraping...')
 
     # add all scrape functions here
-    scrape_indeed(driver, job_search_keyword, location_search_keyword)
+    # scrape_indeed(driver, job_search_keyword, location_search_keyword)
     scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
     print('Scraping Complete')
@@ -59,7 +59,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
     print('Scraping Glassdoor.com...')
 
     glassdoor_base_url = 'https://www.glassdoor.com'
-    glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm'
+    glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
 
     # Open a CSV file to write the job listings data
     with open('glassdoor_jobs.csv', 'w', newline='', encoding='utf-8') as f:
@@ -67,20 +67,23 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
 
-        page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
         all_jobs = []
-        for i in range(1, 7):  # site seems to list duplicates after 6th page
-            time.sleep(5)
-            jobs = page_dom.xpath('//div[@class="job-search-3x5mv1"]')
-            all_jobs = all_jobs + jobs
-
-            if i == 2:
+        for i in range(1, 7):  # site seems to list duplicates after 6th page, (1, 7)
+            if i == 1:
+                page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
+            else:
+                time.sleep(5)
+                page_dom = __get_dom(driver, driver.current_url)
                 try:
-                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
+                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()  # Close popup window
                 except Exception as e:
                     logging.exception(e)
 
-            if i != 6:
+            jobs = page_dom.xpath('//div[@class="job-search-3x5mv1"]')
+            all_jobs = all_jobs + jobs
+            time.sleep(5)
+
+            if i != 6:  # Go to next page if not last page with unique listings
                 driver.find_element(By.CLASS_NAME, 'nextButton').click()
 
         # Organize data and write it to file
