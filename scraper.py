@@ -31,8 +31,8 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
         file_writer.writerow(heading)
 
         # Scrape data from pages, 0-based indexing
-        all_jobs = []
-        for page_no in range(0, 11):  # TODO: pull number of pages and use for range
+        all_jobs = []  # TODO: pull number of pages and use for range
+        for page_no in range(0, 110, 10):  # pages are in 10s (10, 20, 30, ...)
             url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, page_no)
             page_dom = __get_dom(driver, url)
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
