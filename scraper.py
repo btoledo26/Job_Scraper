@@ -67,6 +67,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
 
+        # Scrape data from pages, 1-based indexing
         all_jobs = []
         for i in range(1, 7):  # site seems to list duplicates after 6th page
             if i == 1:
