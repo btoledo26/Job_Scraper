@@ -9,26 +9,30 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 
 
-def scrape(job_search_keyword, location_search_keyword) -> None:
-    print('Scraping...')
-
+def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None:
     # Initialize webdriver
     options = Options()
     options.add_argument("-headless")
     driver = webdriver.Firefox(options=options)
 
-    # add all scrape functions here
-    scrape_indeed(driver, job_search_keyword, location_search_keyword)
-    scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
+    match scrape_option:
+        case 1:
+            print('Scraping Indeed...')
+            scrape_indeed(driver, job_search_keyword, location_search_keyword)
+        case 2:
+            print('Scraping Glassdoor...')
+            scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
+        case _:
+            print('Scraping...')
+            scrape_indeed(driver, job_search_keyword, location_search_keyword)
+            scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
 
     # Close web browser
     driver.quit()
-    print('Scraping Complete')
+    print('Scraping Complete.')
 
 
 def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
-    print('Scraping Indeed.com...')
-
     indeed_base_url = 'https://www.indeed.com'
     indeed_pagination_url = "https://www.indeed.com/jobs?q={}&l={}&radius=35&start={}"
 
@@ -61,12 +65,9 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
             file_writer.writerow(record)
 
     __remove_duplicates('indeed_jobs.csv')
-    print('Finished scraping Indeed.com')
 
 
 def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
-    print('Scraping Glassdoor.com...')
-
     glassdoor_base_url = 'https://www.glassdoor.com'
     glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
 
@@ -81,15 +82,15 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         for i in range(1, 7):  # site seems to list duplicates after 6th page
             if i == 1:
                 page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
-            else:  # !!! leave this code block in this order, scraping breaks otherwise !!!
+            else:  # !!! Leave this code block in this order, scraping breaks otherwise !!!
                 time.sleep(5)  # this sleep call must be here to ensure page loads
                 page_dom = __get_dom(driver, driver.current_url)  # url unknown due to page nav via 'next page' button
                 try:
-                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()  # Close popup window
+                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()  # Close popup window if it exists
                 except Exception as e:
                     logging.exception(e)
 
-            jobs = page_dom.xpath('//div[@class="job-search-3x5mv1"]')
+            jobs = page_dom.xpath('//li[contains(@class, "react-job-listing")]')
             all_jobs = all_jobs + jobs
             time.sleep(5)
 
@@ -108,7 +109,6 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             file_writer.writerow(record)
 
     __remove_duplicates('glassdoor_jobs.csv')
-    print('Finished scraping Glassdoor.com')
 
 
 def __get_dom(driver, url):
@@ -240,4 +240,4 @@ def __get_glassdoor_salary(job):
 def __remove_duplicates(filepath):
     df = pd.read_csv(filepath)
     df.drop_duplicates(subset=['Job Title', 'Company Name'], inplace=True)
-    df.to_csv(f'cleaned_{filepath}', index=False)
+    df.to_csv(f'{filepath}', index=False)
