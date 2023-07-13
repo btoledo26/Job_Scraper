@@ -9,7 +9,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 
 
-def scrape(driver, job_search_keyword, location_search_keyword) -> None:
+def scrape(job_search_keyword, location_search_keyword) -> None:
     print('Scraping...')
 
     # Initialize webdriver
@@ -40,7 +40,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
         file_writer.writerow(heading)
 
         # Scrape data from pages, 0-based indexing
-        all_jobs = []  # TODO: pull number of pages and use for range
+        all_jobs = []  # TODO: change loop to use 'next page' button, check for its existence, break when not found
         for page_no in range(0, 110, 10):  # pages are in 10s (10, 20, 30, ...)
             url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, page_no)
             page_dom = __get_dom(driver, url)
@@ -77,7 +77,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         file_writer.writerow(heading)
 
         # Scrape data from pages, 1-based indexing
-        all_jobs = []
+        all_jobs = []  # TODO: change loop to go until 6 pages are scraped or 'next' button can no longer be found
         for i in range(1, 7):  # site seems to list duplicates after 6th page
             if i == 1:
                 page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
@@ -94,7 +94,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             time.sleep(5)
 
             if i != 6:  # Go to next page if not last page with unique listings
-                driver.find_element(By.CLASS_NAME, 'nextButton').click()
+                driver.find_element(By.CLASS_NAME, 'nextButton').click()  # TODO: add check for button and break when not found
 
         # Organize data and write it to file
         for job in all_jobs:
