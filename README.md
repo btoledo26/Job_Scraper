@@ -14,4 +14,4 @@ scrape('software engineer', 'california', 1)  # only scrape Indeed
 scrape('software engineer', 'california', 2)  # only scrape Glassdoor
 ```
 
-The 'scrape' function creates a .csv file containing the information of each job listing. This information includes the: URL, job title, company name, job location, salary, and job type for each listing as well as the job and location keywords used for the search. Duplicate listings are removed from the final output files.
+The 'scrape' function creates a .csv file for each job board site containing the information of each job listing. This information includes the: URL, job title, company name, job location, salary, and job type for each listing as well as the job and location keywords used for the search. Duplicate listings are removed from the final output files.
