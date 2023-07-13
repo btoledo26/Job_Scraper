@@ -1,6 +1,8 @@
 # Job_Scraper
+A python module for scraping job listings from Indeed and Glassdoor. 
 ## Info
-A python module for scraping job listings from Indeed and Glassdoor. <br><br>
+This project was initially started as a personal tool, and was also meant to serve as a way to learn web scraping with Python. At the start I attempted to just use Selenium for the web driver and data parsing, but found that it was much simpler to use Beautiful Soup and lxml as well to parse the site data. Also, while it may seem strange to have sleep calls in the scraping loops, this is done in an attempt to not get blocked from accessing these job board sites.
+<br><br>
 Inspired by: https://www.blog.datahut.co/post/scrape-indeed-using-selenium-and-beautifulsoup
 
 ## Usage
