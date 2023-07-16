@@ -23,7 +23,7 @@ def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None
     match scrape_option:
         case 1:
             print('Scraping Indeed...')
-            # scrape_indeed(driver, job_search_keyword, location_search_keyword)
+            scrape_indeed(driver, job_search_keyword, location_search_keyword)
         case 2:
             print('Scraping Glassdoor...')
             scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
@@ -40,22 +40,30 @@ def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None
 def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
     indeed_base_url = 'https://www.indeed.com'
     indeed_pagination_url = "https://www.indeed.com/jobs?q={}&l={}&radius=35&start={}"
+    file_path = 'output/indeed_jobs.csv'
 
     # Open a CSV file to write the job listings data
-    with open('output/indeed_jobs.csv', 'w', newline='', encoding='utf-8') as f:
+    with open(file_path, 'w', newline='', encoding='utf-8') as f:
         file_writer = writer(f)
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Job Type',
                    'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
 
         # Scrape data from pages, 0-based indexing
-        all_jobs = []  # TODO: change loop to use 'next page' button, check for its existence, break when not found
-        for page_no in range(0, 110, 10):  # pages are in 10s (10, 20, 30, ...)
-            url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, page_no)
-            page_dom = __get_dom(driver, url)
+        all_jobs = []
+        url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, '0')
+        page_dom = __get_dom(driver, url)
+        while 1:
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
             all_jobs = all_jobs + jobs
             time.sleep(5)
+
+            try:
+                driver.find_element(By.XPATH, '//nav/div[last()]/a').click()
+                page_dom = __get_dom(driver, driver.current_url)
+            except Exception as e:
+                logging.exception(e)
+                break
 
         # Organize data and write it to file
         for job in all_jobs:
@@ -69,15 +77,16 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
                       job_search_keyword, location_search_keyword]
             file_writer.writerow(record)
 
-    __remove_duplicates('indeed_jobs.csv')
+    __remove_duplicates(file_path)
 
 
 def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
     glassdoor_base_url = 'https://www.glassdoor.com'
     glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
+    file_path = 'output/glassdoor_jobs.csv'
 
     # Open a CSV file to write the job listings data
-    with open('output/glassdoor_jobs.csv', 'w', newline='', encoding='utf-8') as f:
+    with open(file_path, 'w', newline='', encoding='utf-8') as f:
         file_writer = writer(f)
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
@@ -114,7 +123,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
                       job_search_keyword, location_search_keyword]
             file_writer.writerow(record)
 
-    __remove_duplicates('glassdoor_jobs.csv')
+    __remove_duplicates(file_path)
 
 
 def __get_dom(driver, url):
