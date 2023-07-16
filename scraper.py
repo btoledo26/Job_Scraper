@@ -1,3 +1,6 @@
+"""TODO:Add summary and usage of module here
+
+"""
 import os
 import logging
 import time
@@ -11,6 +14,22 @@ from selenium.webdriver.common.by import By
 
 
 def scrape(job_search_keyword='', location_search_keyword='', glassdoor_start_url='', scrape_option=0) -> None:
+    """Scrapes job listings from job board sites.
+
+    Initializes a web driver, creates a directory for output files if it does not exist, and scrapes the desired sites
+    based on the provided scrape option. The web driver is closed when the scraping is complete.
+
+    Args:
+        job_search_keyword: A job title to be used to search Indeed
+        location_search_keyword: A location to search for jobs on Indeed
+        glassdoor_start_url: The URL of the first page of a Glassdoor search, used to establish initial page before
+            traversing pages
+        scrape_option: An integer used to determine which job board sites to scrape
+
+            - default: Scrape both Indeed and Glassdoor
+            - 1: Only scrape Indeed
+            - 2: Only scrape Glassdoor
+    """
     # Initialize webdriver
     options = Options()
     options.add_argument("-headless")
@@ -38,6 +57,7 @@ def scrape(job_search_keyword='', location_search_keyword='', glassdoor_start_ur
 
 
 def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
+    """Scrape job listings from Indeed and store them in a .csv file."""
     job_search_keyword = job_search_keyword.strip().lower()
     location_search_keyword = location_search_keyword.strip().lower()
     indeed_base_url = 'https://www.indeed.com'
@@ -51,7 +71,6 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
                    'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
 
-        # Scrape data from pages, 0-based indexing
         all_jobs = []
         driver.get(indeed_pagination_url.format(job_search_keyword, location_search_keyword))
         while 1:
@@ -82,6 +101,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
 
 
 def scrape_glassdoor(driver, start_url) -> None:
+    """Scrape job listings from Glassdoor and store them in a .csv file."""
     glassdoor_base_url = 'https://www.glassdoor.com'
     file_path = 'output/glassdoor_jobs.csv'
 
@@ -91,13 +111,12 @@ def scrape_glassdoor(driver, start_url) -> None:
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary']
         file_writer.writerow(heading)
 
-        # Scrape data from pages, 1-based indexing
         all_jobs = []
         driver.get(start_url)
         for i in range(1, 7):  # site seems to list duplicates after 6th page, so don't go past page 6
             # Check for popup, and close it if it exists
             if i == 2:
-                time.sleep(5)  # this sleep call must be here to ensure page loads
+                time.sleep(5)  # this sleep call must be here to ensure page loads the popup
                 try:
                     driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
                 except Exception as e:
@@ -134,14 +153,15 @@ def scrape_glassdoor(driver, start_url) -> None:
 
 
 def __get_dom(driver):
+    """Gather the data of the current page from web driver and return it."""
     page_content = driver.page_source
     product_soup = BeautifulSoup(page_content, 'html.parser')
     dom = et.HTML(str(product_soup))
     return dom
 
 
-# Extract Indeed.com job link
 def __get_indeed_job_link(job):
+    """Extract job link from Indeed job listing and return it."""
     try:
         job_link = job.xpath('./descendant::h2/a/@href')[0]
     except Exception as e:
@@ -150,8 +170,8 @@ def __get_indeed_job_link(job):
     return job_link
 
 
-# Extract Indeed.com job title
 def __get_indeed_job_title(job):
+    """Extract job title from Indeed job listing and return it."""
     try:
         job_title = job.xpath('./descendant::h2/a/span/text()')[0]
     except Exception as e:
@@ -160,8 +180,8 @@ def __get_indeed_job_title(job):
     return job_title
 
 
-# Extract Indeed.com company name
 def __get_indeed_company_name(job):
+    """Extract company name from Indeed job listing and return it."""
     try:
         company_name = job.xpath('./descendant::span[@class="companyName"]/text()')[0]
     except Exception as e:
@@ -170,8 +190,8 @@ def __get_indeed_company_name(job):
     return company_name
 
 
-# Extract Indeed.com company location
 def __get_indeed_company_location(job):
+    """Extract company location from Indeed job listing and return it."""
     try:
         company_location = job.xpath('./descendant::div[@class="companyLocation"]/text()')[0]
     except Exception as e:
@@ -180,8 +200,8 @@ def __get_indeed_company_location(job):
     return company_location
 
 
-# Extract Indeed.com salary information
 def __get_indeed_salary(job):
+    """Extract salary information from Indeed job listing and return it."""
     try:
         salary = job.xpath('./descendant::span[@class="estimated-salary"]/span/text()')
     except Exception as e:
@@ -198,8 +218,8 @@ def __get_indeed_salary(job):
     return salary
 
 
-# Extract Indeed.com job type
 def __get_indeed_job_type(job):
+    """Extract job type from Indeed job listing and return it."""
     try:
         job_type = job.xpath('./descendant::div[@class="metadata"]/div/text()')[0]
     except Exception as e:
@@ -208,8 +228,8 @@ def __get_indeed_job_type(job):
     return job_type
 
 
-# Extract Glassdoor.com job link
 def __get_glassdoor_job_link(job):
+    """Extract job link from Glassdoor job listing and return it."""
     try:
         job_link = job.xpath('./descendant::a/@href')[0]
     except Exception as e:
@@ -218,8 +238,8 @@ def __get_glassdoor_job_link(job):
     return job_link
 
 
-# Extract Glassdoor.com job title
 def __get_glassdoor_job_title(job):
+    """Extract job title from Glassdoor job listing and return it."""
     try:
         job_title = job.xpath('./descendant::a/div/div[2]/text()')[0]
     except Exception as e:
@@ -228,8 +248,8 @@ def __get_glassdoor_job_title(job):
     return job_title
 
 
-# Extract Glassdoor.com company name
 def __get_glassdoor_company_name(job):
+    """Extract company name from Glassdoor job listing and return it."""
     try:
         company_name = job.xpath('./descendant::a/div/div[1]/div[2]/text()')[0]
     except Exception as e:
@@ -238,8 +258,8 @@ def __get_glassdoor_company_name(job):
     return company_name
 
 
-# Extract Glassdoor.com company location
 def __get_glassdoor_company_location(job):
+    """Extract company location from Glassdoor job listing and return it."""
     try:
         company_location = job.xpath('./descendant::a/div/div[3]/text()')[0]
     except Exception as e:
@@ -248,8 +268,8 @@ def __get_glassdoor_company_location(job):
     return company_location
 
 
-# Extract Glassdoor.com salary information
 def __get_glassdoor_salary(job):
+    """Extract salary information from Glassdoor job listing and return it."""
     try:
         salary = job.xpath('./descendant::a/div/div[4]/text()')[0]
     except Exception as e:
@@ -259,6 +279,7 @@ def __get_glassdoor_salary(job):
 
 
 def __remove_duplicates(filepath):
+    """Remove duplicate job listings from the output file."""
     df = pd.read_csv(filepath)
     df.drop_duplicates(subset=['Job Title', 'Company Name'], inplace=True)
     df.to_csv(f'{filepath}', index=False)
