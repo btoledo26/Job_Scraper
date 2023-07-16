@@ -38,8 +38,10 @@ def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None
 
 
 def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
+    job_search_keyword = job_search_keyword.strip().lower()
+    location_search_keyword = location_search_keyword.strip().lower()
     indeed_base_url = 'https://www.indeed.com'
-    indeed_pagination_url = "https://www.indeed.com/jobs?q={}&l={}&radius=35&start={}"
+    indeed_pagination_url = "https://www.indeed.com/jobs?q={}&l={}"
     file_path = 'output/indeed_jobs.csv'
 
     # Open a CSV file to write the job listings data
@@ -51,7 +53,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
 
         # Scrape data from pages, 0-based indexing
         all_jobs = []
-        driver.get(indeed_pagination_url.format(job_search_keyword, location_search_keyword, '0'))
+        driver.get(indeed_pagination_url.format(job_search_keyword, location_search_keyword))
         page_dom = __get_dom(driver)
         while 1:
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
@@ -82,7 +84,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
 
 def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
     location_search_keyword = __format_glassdoor_location_keyword(location_search_keyword)
-    job_search_keyword = __format_glassdoor_job_keyword(job_search_keyword)
+    job_search_keyword = job_search_keyword.strip().lower()
     glassdoor_base_url = 'https://www.glassdoor.com'
     glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,11_IC1151682_KO12,16.htm'
     file_path = 'output/glassdoor_jobs.csv'
@@ -210,10 +212,6 @@ def __get_indeed_job_type(job):
         job_type = 'Not available'
         logging.exception(e)
     return job_type
-
-
-def __format_glassdoor_job_keyword(job_keyword):
-    return job_keyword.strip().lower()
 
 
 # Correct the formatting of the location keyword for the URL
