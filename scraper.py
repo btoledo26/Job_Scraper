@@ -10,10 +10,10 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 
 
-def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None:
+def scrape(job_search_keyword='', location_search_keyword='', glassdoor_start_url='', scrape_option=0) -> None:
     # Initialize webdriver
     options = Options()
-    # options.add_argument("-headless")
+    options.add_argument("-headless")
     driver = webdriver.Firefox(options=options)
 
     # Make output folder if one does not exist
@@ -25,13 +25,12 @@ def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None
             print('Scraping Indeed...')
             scrape_indeed(driver, job_search_keyword, location_search_keyword)
         case 2:
-            print('Glassdoor scraping unavailable.')
-            # print('Scraping Glassdoor...')
-            # scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
+            print('Scraping Glassdoor...')
+            scrape_glassdoor(driver, glassdoor_start_url)
         case _:
             print('Scraping...')
             scrape_indeed(driver, job_search_keyword, location_search_keyword)
-            # scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
+            scrape_glassdoor(driver, glassdoor_start_url)
 
     # Close web browser
     driver.quit()
@@ -82,26 +81,19 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
     __remove_duplicates(file_path)
 
 
-def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
-    location_search_keyword = __format_glassdoor_location_keyword(location_search_keyword)
-    # job_search_keyword = job_search_keyword.strip().lower()
+def scrape_glassdoor(driver, start_url) -> None:
     glassdoor_base_url = 'https://www.glassdoor.com'
-    glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
-
-    # TODO: fix start url, some of the integer values are based on the length of search terms
-    # last three values to be inserted are: length of location with dashes up to dash before job title, previous value + 1, sum of area between Job/ and -jobs
-    # glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,{}_IC1151630_KO{},{}.htm'
     file_path = 'output/glassdoor_jobs.csv'
 
     # Open a CSV file to write the job listings data
     with open(file_path, 'w', newline='', encoding='utf-8') as f:
         file_writer = writer(f)
-        heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Searched Job', 'Searched Location']
+        heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary']
         file_writer.writerow(heading)
 
         # Scrape data from pages, 1-based indexing
         all_jobs = []
-        driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
+        driver.get(start_url)
         for i in range(1, 7):  # site seems to list duplicates after 6th page, so don't go past page 6
             # Check for popup, and close it if it exists
             if i == 2:
@@ -135,8 +127,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             company_name = __get_glassdoor_company_name(job)
             company_location = __get_glassdoor_company_location(job)
             salary = __get_glassdoor_salary(job)
-            record = [job_link, job_title, company_name, company_location, salary,
-                      job_search_keyword, location_search_keyword]
+            record = [job_link, job_title, company_name, company_location, salary]
             file_writer.writerow(record)
 
     __remove_duplicates(file_path)
@@ -215,15 +206,6 @@ def __get_indeed_job_type(job):
         job_type = 'Not available'
         logging.exception(e)
     return job_type
-
-
-# Correct the formatting of the location keyword for the URL
-def __format_glassdoor_location_keyword(location_keyword):
-    location_keyword = location_keyword.strip().lower()
-    location_keyword = location_keyword.replace(' ', '')
-    location_keyword = location_keyword.replace(',', '-')
-    location_keyword += '-us'
-    return location_keyword
 
 
 # Extract Glassdoor.com job link
