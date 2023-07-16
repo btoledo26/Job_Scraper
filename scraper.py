@@ -54,15 +54,14 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
         # Scrape data from pages, 0-based indexing
         all_jobs = []
         driver.get(indeed_pagination_url.format(job_search_keyword, location_search_keyword))
-        page_dom = __get_dom(driver)
         while 1:
+            page_dom = __get_dom(driver)
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
             all_jobs = all_jobs + jobs
             time.sleep(5)  # sleep call to avoid captcha or other verification
 
             try:
                 driver.find_element(By.XPATH, '//nav/div[last()]/a').click()
-                page_dom = __get_dom(driver)
             except Exception as e:
                 logging.exception(e)
                 break
@@ -98,7 +97,6 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         # Scrape data from pages, 1-based indexing
         all_jobs = []
         driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
-        # driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
         for i in range(1, 7):  # site seems to list duplicates after 6th page, so don't go past page 6
             # Check for popup, and close it if it exists
             if i == 2:
