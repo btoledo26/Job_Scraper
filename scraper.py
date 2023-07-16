@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 from csv import writer
@@ -12,13 +13,17 @@ from selenium.webdriver.common.by import By
 def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None:
     # Initialize webdriver
     options = Options()
-    options.add_argument("-headless")
+    # options.add_argument("-headless")
     driver = webdriver.Firefox(options=options)
+
+    # Make output folder if one does not exist
+    if not os.path.exists('output'):
+        os.mkdir('output')
 
     match scrape_option:
         case 1:
             print('Scraping Indeed...')
-            scrape_indeed(driver, job_search_keyword, location_search_keyword)
+            # scrape_indeed(driver, job_search_keyword, location_search_keyword)
         case 2:
             print('Scraping Glassdoor...')
             scrape_glassdoor(driver, job_search_keyword, location_search_keyword)
@@ -37,7 +42,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
     indeed_pagination_url = "https://www.indeed.com/jobs?q={}&l={}&radius=35&start={}"
 
     # Open a CSV file to write the job listings data
-    with open('indeed_jobs.csv', 'w', newline='', encoding='utf-8') as f:
+    with open('output/indeed_jobs.csv', 'w', newline='', encoding='utf-8') as f:
         file_writer = writer(f)
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Job Type',
                    'Searched Job', 'Searched Location']
@@ -72,7 +77,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
     glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
 
     # Open a CSV file to write the job listings data
-    with open('glassdoor_jobs.csv', 'w', newline='', encoding='utf-8') as f:
+    with open('output/glassdoor_jobs.csv', 'w', newline='', encoding='utf-8') as f:
         file_writer = writer(f)
         heading = ['URL', 'Job Title', 'Company Name', 'Location', 'Salary', 'Searched Job', 'Searched Location']
         file_writer.writerow(heading)
@@ -95,7 +100,8 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             time.sleep(5)
 
             if i != 6:  # Go to next page if not last page with unique listings
-                driver.find_element(By.CLASS_NAME, 'nextButton').click()  # TODO: add check for button and break when not found
+                driver.find_element(By.CLASS_NAME,
+                                    'nextButton').click()  # TODO: add check for button and break when not found
 
         # Organize data and write it to file
         for job in all_jobs:
