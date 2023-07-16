@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 def scrape(job_search_keyword, location_search_keyword, scrape_option=0) -> None:
     # Initialize webdriver
     options = Options()
-    # options.add_argument("-headless")
+    options.add_argument("-headless")
     driver = webdriver.Firefox(options=options)
 
     # Make output folder if one does not exist
