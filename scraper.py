@@ -81,8 +81,10 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
 
 
 def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> None:
+    location_search_keyword = __format_glassdoor_location_keyword(location_search_keyword)
+    job_search_keyword = __format_glassdoor_job_keyword(job_search_keyword)
     glassdoor_base_url = 'https://www.glassdoor.com'
-    glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,6_IS3163_KO7,24.htm?clickSource=searchBox'
+    glassdoor_start_url = 'https://www.glassdoor.com/Job/{}-{}-jobs-SRCH_IL.0,11_IC1151682_KO12,16.htm'
     file_path = 'output/glassdoor_jobs.csv'
 
     # Open a CSV file to write the job listings data
@@ -94,6 +96,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         # Scrape data from pages, 1-based indexing
         all_jobs = []
         driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
+        # driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
         for i in range(1, 7):  # site seems to list duplicates after 6th page, so don't go past page 6
             # Check for popup, and close it if it exists
             if i == 2:
@@ -111,8 +114,11 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
             # Go to next page
             if i < 6:
                 try:
+                    next_page_button = driver.find_element(By.CLASS_NAME, 'nextButton')
+                    if not next_page_button.is_enabled():
+                        break
                     time.sleep(5)  # sleep call to avoid captcha or other verification
-                    driver.find_element(By.CLASS_NAME, 'nextButton').click()
+                    next_page_button.click()
                 except Exception as e:
                     logging.exception(e)
                     break
@@ -204,6 +210,19 @@ def __get_indeed_job_type(job):
         job_type = 'Not available'
         logging.exception(e)
     return job_type
+
+
+def __format_glassdoor_job_keyword(job_keyword):
+    return job_keyword.strip().lower()
+
+
+# Correct the formatting of the location keyword for the URL
+def __format_glassdoor_location_keyword(location_keyword):
+    location_keyword = location_keyword.strip().lower()
+    location_keyword = location_keyword.replace(' ', '')
+    location_keyword = location_keyword.replace(',', '-')
+    location_keyword += '-us'
+    return location_keyword
 
 
 # Extract Glassdoor.com job link
