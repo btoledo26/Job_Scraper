@@ -51,16 +51,16 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
 
         # Scrape data from pages, 0-based indexing
         all_jobs = []
-        url = indeed_pagination_url.format(job_search_keyword, location_search_keyword, '0')
-        page_dom = __get_dom(driver, url)
+        driver.get(indeed_pagination_url.format(job_search_keyword, location_search_keyword, '0'))
+        page_dom = __get_dom(driver)
         while 1:
             jobs = page_dom.xpath('//div[@class="job_seen_beacon"]')
             all_jobs = all_jobs + jobs
-            time.sleep(5)
+            time.sleep(5)  # sleep call to avoid captcha or other verification
 
             try:
                 driver.find_element(By.XPATH, '//nav/div[last()]/a').click()
-                page_dom = __get_dom(driver, driver.current_url)
+                page_dom = __get_dom(driver)
             except Exception as e:
                 logging.exception(e)
                 break
@@ -92,25 +92,30 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
         file_writer.writerow(heading)
 
         # Scrape data from pages, 1-based indexing
-        all_jobs = []  # TODO: change loop to go until 6 pages are scraped or 'next' button can no longer be found
-        for i in range(1, 7):  # site seems to list duplicates after 6th page
-            if i == 1:
-                page_dom = __get_dom(driver, glassdoor_start_url.format(location_search_keyword, job_search_keyword))
-            else:  # !!! Leave this code block in this order, scraping breaks otherwise !!!
+        all_jobs = []
+        driver.get(glassdoor_start_url.format(location_search_keyword, job_search_keyword))
+        for i in range(1, 7):  # site seems to list duplicates after 6th page, so don't go past page 6
+            # Check for popup, and close it if it exists
+            if i == 2:
                 time.sleep(5)  # this sleep call must be here to ensure page loads
-                page_dom = __get_dom(driver, driver.current_url)  # url unknown due to page nav via 'next page' button
                 try:
-                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()  # Close popup window if it exists
+                    driver.find_element(By.CLASS_NAME, 'e1jbctw80').click()
                 except Exception as e:
                     logging.exception(e)
 
+            # Get page data
+            page_dom = __get_dom(driver)
             jobs = page_dom.xpath('//li[contains(@class, "react-job-listing")]')
             all_jobs = all_jobs + jobs
-            time.sleep(5)
 
-            if i != 6:  # Go to next page if not last page with unique listings
-                driver.find_element(By.CLASS_NAME,
-                                    'nextButton').click()  # TODO: add check for button and break when not found
+            # Go to next page
+            if i < 6:
+                try:
+                    time.sleep(5)  # sleep call to avoid captcha or other verification
+                    driver.find_element(By.CLASS_NAME, 'nextButton').click()
+                except Exception as e:
+                    logging.exception(e)
+                    break
 
         # Organize data and write it to file
         for job in all_jobs:
@@ -126,8 +131,7 @@ def scrape_glassdoor(driver, job_search_keyword, location_search_keyword) -> Non
     __remove_duplicates(file_path)
 
 
-def __get_dom(driver, url):
-    driver.get(url)
+def __get_dom(driver):
     page_content = driver.page_source
     product_soup = BeautifulSoup(page_content, 'html.parser')
     dom = et.HTML(str(product_soup))
