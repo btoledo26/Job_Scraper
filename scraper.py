@@ -1,5 +1,11 @@
-"""TODO:Add summary and usage of module here
+"""This module can be used to scrape job listing from Indeed and Glassdoor, and these listings are written to a .csv
+file for later use. The sites can be scraped individually in separate function calls or together in a single function
+call.
 
+Warning: This may not work in the future as these sites implement systems to detect automated site interaction
+
+Functions:
+    scrape - writes a .csv file containing job listings to the 'output' folder
 """
 import os
 import logging
@@ -42,21 +48,21 @@ def scrape(job_search_keyword='', location_search_keyword='', glassdoor_start_ur
     match scrape_option:
         case 1:
             print('Scraping Indeed...')
-            scrape_indeed(driver, job_search_keyword, location_search_keyword)
+            __scrape_indeed(driver, job_search_keyword, location_search_keyword)
         case 2:
             print('Scraping Glassdoor...')
-            scrape_glassdoor(driver, glassdoor_start_url)
+            __scrape_glassdoor(driver, glassdoor_start_url)
         case _:
             print('Scraping...')
-            scrape_indeed(driver, job_search_keyword, location_search_keyword)
-            scrape_glassdoor(driver, glassdoor_start_url)
+            __scrape_indeed(driver, job_search_keyword, location_search_keyword)
+            __scrape_glassdoor(driver, glassdoor_start_url)
 
     # Close web browser
     driver.quit()
     print('Scraping Complete.')
 
 
-def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
+def __scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
     """Scrape job listings from Indeed and store them in a .csv file."""
     job_search_keyword = job_search_keyword.strip().lower()
     location_search_keyword = location_search_keyword.strip().lower()
@@ -100,7 +106,7 @@ def scrape_indeed(driver, job_search_keyword, location_search_keyword) -> None:
     __remove_duplicates(file_path)
 
 
-def scrape_glassdoor(driver, start_url) -> None:
+def __scrape_glassdoor(driver, start_url) -> None:
     """Scrape job listings from Glassdoor and store them in a .csv file."""
     glassdoor_base_url = 'https://www.glassdoor.com'
     file_path = 'output/glassdoor_jobs.csv'
