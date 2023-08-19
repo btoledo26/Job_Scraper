@@ -1,7 +1,7 @@
 # Job_Scraper
 A python module for scraping job listings from Indeed and Glassdoor. 
 
-> **Warning**<br>
+> **Important**<br>
 > Currently broken due to the sites implementing stronger anti-automation countermeasures.
 
 ## Info
