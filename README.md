@@ -1,5 +1,9 @@
 # Job_Scraper
 A python module for scraping job listings from Indeed and Glassdoor. 
+
+> **Warning**<br>
+> Currently broken due to the sites implementing stronger anti-automation countermeasures.
+
 ## Info
 This project was initially started as a personal tool, and was also meant to serve as a way to learn web scraping with Python. At the start I attempted to just use Selenium for the web driver and data parsing, but found that it was much simpler to use Beautiful Soup and lxml as well to parse the site data. Also, while it may seem strange to have sleep calls in the scraping loops, this is done in an attempt to not get blocked from accessing these job board sites.
 <br><br>
@@ -24,6 +28,4 @@ The 'scrape' function creates a .csv file for each job board site containing the
 > **Note**<br>
 > To gather the starting URL for Glassdoor just go to their site, search based on your desired job title and location, and copy the URL for the resulting page as shown below.
 
-![1](https://github.com/btoledo26/Job_Scraper/assets/59942879/4680e0e9-832e-4d48-967d-3cf4d7b6d649)
-
-
+![Untitled](https://github.com/btoledo26/Job_Scraper/assets/59942879/0e909339-118d-4dc2-b4cc-2e6d1fbe0a76)
